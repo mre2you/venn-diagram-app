@@ -1,0 +1,15 @@
+{
+  "name": "venn-diagram-app",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "konva": "^9.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-konva": "^18.0.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  }
+}
