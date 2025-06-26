@@ -84,12 +84,13 @@ const VennApp = () => {
 
   const handleTransform = (index, e) => {
     const node = e.target;
-    const scaleX = node.scaleX();
-    const scaleY = node.scaleY();
+    const width = node.width() * node.scaleX();
+    const height = node.height() * node.scaleY();
 
     const newEllipses = [...ellipses];
-    newEllipses[index].radiusX = Math.max(5, newEllipses[index].radiusX * scaleX);
-    newEllipses[index].radiusY = Math.max(5, newEllipses[index].radiusY * scaleY);
+    newEllipses[index].radiusX = Math.max(5, width / 2);
+    newEllipses[index].radiusY = Math.max(5, height / 2);
+
     node.scaleX(1);
     node.scaleY(1);
     setEllipses(newEllipses);
@@ -154,6 +155,8 @@ const VennApp = () => {
                 y={el.y}
                 radiusX={el.radiusX}
                 radiusY={el.radiusY}
+                width={el.radiusX * 2}
+                height={el.radiusY * 2}
                 fill={el.fill}
                 draggable
                 onClick={() => setSelectedId(el.id)}
@@ -176,7 +179,17 @@ const VennApp = () => {
           <Transformer
             ref={transformerRef}
             boundBoxFunc={(oldBox, newBox) => newBox}
-            enabledAnchors={["top-left", "top-right", "bottom-left", "bottom-right"]}
+            enabledAnchors={[
+              "top-left",
+              "top-right",
+              "bottom-left",
+              "bottom-right",
+              "middle-left",
+              "middle-right",
+              "top-center",
+              "bottom-center",
+            ]}
+            rotateEnabled={false}
           />
         </Layer>
       </Stage>
