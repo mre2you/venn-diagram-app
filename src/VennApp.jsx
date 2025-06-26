@@ -1,5 +1,5 @@
-import React, { useRef, useState } from "react";
-import { Stage, Layer, Ellipse, Text } from "react-konva";
+import React, { useRef, useState, useEffect } from "react";
+import { Stage, Layer, Ellipse, Text, Transformer } from "react-konva";
 import Konva from "konva";
 
 const initialEllipses = [
@@ -61,6 +61,19 @@ const initialEllipses = [
 
 const VennApp = () => {
   const [ellipses, setEllipses] = useState(initialEllipses);
+  const [selectedId, setSelectedId] = useState(null);
+  const shapeRefs = useRef({});
+  const transformerRef = useRef();
+
+  useEffect(() => {
+    if (selectedId && transformerRef.current) {
+      const node = shapeRefs.current[selectedId];
+      if (node) {
+        transformerRef.current.nodes([node]);
+        transformerRef.current.getLayer().batchDraw();
+      }
+    }
+  }, [selectedId, ellipses]);
 
   const handleDragMove = (index, e) => {
     const newEllipses = [...ellipses];
@@ -75,8 +88,8 @@ const VennApp = () => {
     const scaleY = node.scaleY();
 
     const newEllipses = [...ellipses];
-    newEllipses[index].radiusX *= scaleX;
-    newEllipses[index].radiusY *= scaleY;
+    newEllipses[index].radiusX = Math.max(5, newEllipses[index].radiusX * scaleX);
+    newEllipses[index].radiusY = Math.max(5, newEllipses[index].radiusY * scaleY);
     node.scaleX(1);
     node.scaleY(1);
     setEllipses(newEllipses);
@@ -122,17 +135,29 @@ const VennApp = () => {
       <p style={{ textAlign: "center" }}>
         Unique Intersections: <strong>{countIntersections()}</strong>
       </p>
-      <Stage width={700} height={500} style={{ border: "1px solid #ccc" }}>
+      <Stage
+        width={700}
+        height={500}
+        style={{ border: "1px solid #ccc" }}
+        onMouseDown={(e) => {
+          if (e.target === e.target.getStage()) {
+            setSelectedId(null);
+          }
+        }}
+      >
         <Layer>
           {ellipses.map((el, i) => (
             <React.Fragment key={el.id}>
               <Ellipse
+                ref={(node) => (shapeRefs.current[el.id] = node)}
                 x={el.x}
                 y={el.y}
                 radiusX={el.radiusX}
                 radiusY={el.radiusY}
                 fill={el.fill}
                 draggable
+                onClick={() => setSelectedId(el.id)}
+                onTap={() => setSelectedId(el.id)}
                 onDragMove={(e) => handleDragMove(i, e)}
                 onTransformEnd={(e) => handleTransform(i, e)}
                 stroke="black"
@@ -148,6 +173,11 @@ const VennApp = () => {
               />
             </React.Fragment>
           ))}
+          <Transformer
+            ref={transformerRef}
+            boundBoxFunc={(oldBox, newBox) => newBox}
+            enabledAnchors={["top-left", "top-right", "bottom-left", "bottom-right"]}
+          />
         </Layer>
       </Stage>
     </div>
