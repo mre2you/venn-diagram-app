@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Stage, Layer, Ellipse, Text, Transformer } from "react-konva";
+import { Stage, Layer, Ellipse, Text, Transformer, Line } from "react-konva";
 import Konva from "konva";
 
 const initialEllipses = [
@@ -138,7 +138,7 @@ const VennApp = () => {
       </p>
       <Stage
         width={700}
-        height={500}
+        height={550}
         style={{ border: "1px solid #ccc" }}
         onMouseDown={(e) => {
           if (e.target === e.target.getStage()) {
@@ -176,6 +176,56 @@ const VennApp = () => {
               />
             </React.Fragment>
           ))}
+
+          {/* X-axis legend with tick marks */}
+          <Line points={[50, 500, 650, 500]} stroke="black" strokeWidth={1} />
+          {[...Array(6)].map((_, i) => {
+            const x = 50 + (600 / 5) * i;
+            const label = i === 1 ? "Low" : i === 3 ? "Med" : i === 5 ? "High" : "";
+            return (
+              <React.Fragment key={`x-${i}`}>
+                <Line points={[x, 495, x, 505]} stroke="black" strokeWidth={1} />
+                {label && (
+                  <Text
+                    x={x - 15}
+                    y={510}
+                    text={label}
+                    fontSize={12}
+                    width={30}
+                    align="center"
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+
+          {/* Y-axis legend with tick marks and labels */}
+          <Line points={[30, 500, 30, 100]} stroke="black" strokeWidth={1} />
+          {[...Array(6)].map((_, i) => {
+            const y = 500 - (400 / 5) * i;
+            let label = "";
+            if (i === 0) label = "Intention";
+            if (i === 2) label = "Activation";
+            if (i === 4) label = "Execution";
+            if (i === 5) label = "Eval + Adapt";
+            if (i === 6) label = "Impact";
+            return (
+              <React.Fragment key={`y-${i}`}>
+                <Line points={[25, y, 35, y]} stroke="black" strokeWidth={1} />
+                {label && (
+                  <Text
+                    x={-20}
+                    y={y - 7}
+                    text={label}
+                    fontSize={12}
+                    width={50}
+                    align="right"
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+
           <Transformer
             ref={transformerRef}
             boundBoxFunc={(oldBox, newBox) => newBox}
