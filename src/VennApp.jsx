@@ -89,6 +89,7 @@ const countAllStrictOverlaps = (ellipses) => {
 const VennApp = () => {
   const [ellipses, setEllipses] = useState(initialEllipses);
   const [selectedId, setSelectedId] = useState(null);
+  const [ratings, setRatings] = useState({});
   const shapeRefs = useRef({});
   const transformerRef = useRef();
 
@@ -123,12 +124,38 @@ const VennApp = () => {
     setEllipses(newEllipses);
   };
 
+  const handleRatingChange = (id, value) => {
+    setRatings({ ...ratings, [id]: value });
+  };
+
   return (
     <div>
       <h2 style={{ textAlign: "center" }}>Venn Diagram Interaction</h2>
       <p style={{ textAlign: "center" }}>
         Unique Intersections: <strong>{countAllStrictOverlaps(ellipses)}</strong>
       </p>
+
+      <div style={{ textAlign: "center", marginBottom: "20px" }}>
+        {ellipses.map((el) => (
+          <div key={el.id} style={{ marginBottom: "10px" }}>
+            <label>
+              {el.label.replace("\n", " ")} Rating:
+              <select
+                value={ratings[el.id] || ""}
+                onChange={(e) => handleRatingChange(el.id, e.target.value)}
+              >
+                <option value="">Select</option>
+                {[1, 2, 3, 4, 5].map((num) => (
+                  <option key={num} value={num}>
+                    {num}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ))}
+      </div>
+
       <Stage
         width={800}
         height={600}
