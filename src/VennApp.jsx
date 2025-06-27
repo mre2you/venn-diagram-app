@@ -202,10 +202,10 @@ const VennApp = () => {
           {/* Y-axis legend with tick marks */}
           <Line points={[100, 50, 100, 550]} stroke="black" strokeWidth={1} />
           {[...Array(10)].map((_, i) => {
-            const y = 50 + (500 / 9) * i;
+            const y = 550 - (500 / 9) * i;
             let label = "";
             if (i === 0) label = "Intention";
-            else if (i === 1) label = "Activation";
+            else if (i === 2) label = "Activation";
             else if (i === 4) label = "Execution";
             else if (i === 7) label = "Eval + Adapt";
             else if (i === 9) label = "Impact";
