@@ -114,27 +114,45 @@ const VennApp = () => {
     );
   };
 
-  const countIntersections = () => {
-    const overlapMap = new Set();
+  const countAllUniqueCombinations = () => {
+    const n = ellipses.length;
+    const seen = new Set();
 
-    for (let i = 0; i < ellipses.length; i++) {
-      const boxA = getBoundingBox(ellipses[i]);
-      for (let j = i + 1; j < ellipses.length; j++) {
-        const boxB = getBoundingBox(ellipses[j]);
-        if (isOverlap(boxA, boxB)) {
-          overlapMap.add([ellipses[i].id, ellipses[j].id].sort().join("&"));
-        }
+    for (let i = 1; i < 1 << n; i++) {
+      const indices = [];
+      for (let j = 0; j < n; j++) {
+        if ((i >> j) & 1) indices.push(j);
+      }
+
+      const combined = indices.map((index) => getBoundingBox(ellipses[index]));
+      const intersection = combined.reduce((acc, box) => {
+        if (!acc) return box;
+        return {
+          left: Math.max(acc.left, box.left),
+          right: Math.min(acc.right, box.right),
+          top: Math.max(acc.top, box.top),
+          bottom: Math.min(acc.bottom, box.bottom),
+        };
+      }, null);
+
+      if (
+        intersection &&
+        intersection.left < intersection.right &&
+        intersection.top < intersection.bottom
+      ) {
+        const key = indices.map((i) => ellipses[i].id).sort().join("&");
+        seen.add(key);
       }
     }
 
-    return overlapMap.size;
+    return seen.size;
   };
 
   return (
     <div>
       <h2 style={{ textAlign: "center" }}>Venn Diagram Interaction</h2>
       <p style={{ textAlign: "center" }}>
-        Unique Intersections: <strong>{countIntersections()}</strong>
+        Unique Intersections: <strong>{countAllUniqueCombinations()}</strong>
       </p>
       <Stage
         width={800}
