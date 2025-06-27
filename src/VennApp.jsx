@@ -105,12 +105,21 @@ const VennApp = () => {
     };
   };
 
-  const isOverlap = (boxA, boxB) => {
-    return !(
-      boxA.right < boxB.left ||
-      boxA.left > boxB.right ||
-      boxA.bottom < boxB.top ||
-      boxA.top > boxB.bottom
+  const isOverlap = (boxes) => {
+    const intersection = boxes.reduce((acc, box) => {
+      if (!acc) return box;
+      return {
+        left: Math.max(acc.left, box.left),
+        right: Math.min(acc.right, box.right),
+        top: Math.max(acc.top, box.top),
+        bottom: Math.min(acc.bottom, box.bottom),
+      };
+    }, null);
+
+    return (
+      intersection &&
+      intersection.left < intersection.right &&
+      intersection.top < intersection.bottom
     );
   };
 
@@ -124,22 +133,8 @@ const VennApp = () => {
         if ((i >> j) & 1) indices.push(j);
       }
 
-      const combined = indices.map((index) => getBoundingBox(ellipses[index]));
-      const intersection = combined.reduce((acc, box) => {
-        if (!acc) return box;
-        return {
-          left: Math.max(acc.left, box.left),
-          right: Math.min(acc.right, box.right),
-          top: Math.max(acc.top, box.top),
-          bottom: Math.min(acc.bottom, box.bottom),
-        };
-      }, null);
-
-      if (
-        intersection &&
-        intersection.left < intersection.right &&
-        intersection.top < intersection.bottom
-      ) {
+      const boxes = indices.map((index) => getBoundingBox(ellipses[index]));
+      if (isOverlap(boxes)) {
         const key = indices.map((i) => ellipses[i].id).sort().join("&");
         seen.add(key);
       }
