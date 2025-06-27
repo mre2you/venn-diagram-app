@@ -204,11 +204,11 @@ const VennApp = () => {
           {[...Array(10)].map((_, i) => {
             const y = 50 + (500 / 9) * i;
             let label = "";
-            if (i === 0) label = "Intention";
-            else if (i === 2) label = "Activation";
-            else if (i === 4) label = "Execution";
-            else if (i === 9) label = "Impact";
-            else if (i === 8) label = "Eval + Adapt";
+            if (i === 0) label = "Impact";
+            else if (i === 1) label = "Eval + Adapt";
+            else if (i === 5) label = "Execution";
+            else if (i === 7) label = "Activation";
+            else if (i === 9) label = "Intention";
             return (
               <React.Fragment key={i}>
                 <Line points={[95, y, 105, y]} stroke="black" strokeWidth={1} />
