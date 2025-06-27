@@ -69,6 +69,23 @@ const pointInEllipse = (x, y, ellipse) => {
   );
 };
 
+const countAllStrictOverlaps = (ellipses) => {
+  const uniqueRegions = new Set();
+  for (let x = 0; x <= 800; x += 2) {
+    for (let y = 0; y <= 600; y += 2) {
+      const inside = ellipses
+        .map((ellipse) => (pointInEllipse(x, y, ellipse) ? ellipse.id : null))
+        .filter(Boolean)
+        .sort();
+      if (inside.length > 0) {
+        const key = inside.join("&");
+        uniqueRegions.add(key);
+      }
+    }
+  }
+  return uniqueRegions.size;
+};
+
 const VennApp = () => {
   const [ellipses, setEllipses] = useState(initialEllipses);
   const [selectedId, setSelectedId] = useState(null);
@@ -106,46 +123,11 @@ const VennApp = () => {
     setEllipses(newEllipses);
   };
 
-  const countAllStrictOverlaps = () => {
-    const n = ellipses.length;
-    const seen = new Set();
-
-    for (let i = 1; i < 1 << n; i++) {
-      const indices = [];
-      for (let j = 0; j < n; j++) {
-        if ((i >> j) & 1) indices.push(j);
-      }
-
-      let count = 0;
-      for (let x = 0; x <= 800; x += 10) {
-        for (let y = 0; y <= 600; y += 10) {
-          let inside = indices.every((idx) => pointInEllipse(x, y, ellipses[idx]));
-          let othersOutside = ellipses.every((el, idx) => {
-            if (!indices.includes(idx)) return !pointInEllipse(x, y, el);
-            return true;
-          });
-          if (inside && othersOutside) {
-            count++;
-            break;
-          }
-        }
-        if (count) break;
-      }
-
-      if (count) {
-        const key = indices.map((i) => ellipses[i].id).sort().join("&");
-        seen.add(key);
-      }
-    }
-
-    return seen.size;
-  };
-
   return (
     <div>
       <h2 style={{ textAlign: "center" }}>Venn Diagram Interaction</h2>
       <p style={{ textAlign: "center" }}>
-        Unique Intersections: <strong>{countAllStrictOverlaps()}</strong>
+        Unique Intersections: <strong>{countAllStrictOverlaps(ellipses)}</strong>
       </p>
       <Stage
         width={800}
