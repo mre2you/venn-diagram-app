@@ -5,17 +5,17 @@ import Konva from "konva";
 const initialEllipses = [
   {
     id: "cultural",
-    x: 250,
-    y: 200,
-    radiusX: 100,
-    radiusY: 80,
+    x: 200,
+    y: 160,
+    radiusX: 80,
+    radiusY: 60,
     fill: "rgba(192, 80, 77, 0.4)",
     label: "Cultural resilience &\nEE buy-in",
   },
   {
     id: "leadership",
-    x: 280,
-    y: 300,
+    x: 200,
+    y: 400,
     radiusX: 100,
     radiusY: 80,
     fill: "rgba(237, 125, 49, 0.4)",
@@ -23,35 +23,35 @@ const initialEllipses = [
   },
   {
     id: "agile",
-    x: 350,
-    y: 230,
-    radiusX: 150,
-    radiusY: 120,
+    x: 300,
+    y: 280,
+    radiusX: 130,
+    radiusY: 100,
     fill: "rgba(91, 155, 213, 0.4)",
     label: "Agile, Data-driven decision\nmaking",
   },
   {
     id: "change",
-    x: 400,
-    y: 120,
-    radiusX: 130,
-    radiusY: 60,
+    x: 350,
+    y: 80,
+    radiusX: 150,
+    radiusY: 80,
     fill: "rgba(155, 187, 89, 0.4)",
     label: "Change sustainability",
   },
   {
     id: "robust",
-    x: 530,
-    y: 220,
-    radiusX: 140,
-    radiusY: 100,
+    x: 500,
+    y: 280,
+    radiusX: 170,
+    radiusY: 120,
     fill: "rgba(165, 165, 165, 0.3)",
     label: "Robust activation\nframework",
   },
   {
     id: "intent",
-    x: 480,
-    y: 330,
+    x: 450,
+    y: 450,
     radiusX: 150,
     radiusY: 80,
     fill: "rgba(201, 218, 248, 0.5)",
@@ -204,11 +204,11 @@ const VennApp = () => {
           {[...Array(10)].map((_, i) => {
             const y = 50 + (500 / 9) * i;
             let label = "";
-            if (i === 0) label = "Impact";
-            else if (i === 1) label = "Eval + Adapt";
-            else if (i === 5) label = "Execution";
-            else if (i === 7) label = "Activation";
-            else if (i === 9) label = "Intention";
+            if (i === 0) label = "Intention";
+            else if (i === 1) label = "Activation";
+            else if (i === 4) label = "Execution";
+            else if (i === 7) label = "Eval + Adapt";
+            else if (i === 9) label = "Impact";
             return (
               <React.Fragment key={i}>
                 <Line points={[95, y, 105, y]} stroke="black" strokeWidth={1} />
