@@ -5,7 +5,7 @@ import Konva from "konva";
 const initialEllipses = [
   {
     id: "cultural",
-    x: 150,
+    x: 250,
     y: 200,
     radiusX: 100,
     radiusY: 80,
@@ -14,7 +14,7 @@ const initialEllipses = [
   },
   {
     id: "leadership",
-    x: 180,
+    x: 280,
     y: 300,
     radiusX: 100,
     radiusY: 80,
@@ -23,7 +23,7 @@ const initialEllipses = [
   },
   {
     id: "agile",
-    x: 250,
+    x: 350,
     y: 230,
     radiusX: 150,
     radiusY: 120,
@@ -32,7 +32,7 @@ const initialEllipses = [
   },
   {
     id: "change",
-    x: 300,
+    x: 400,
     y: 120,
     radiusX: 130,
     radiusY: 60,
@@ -41,7 +41,7 @@ const initialEllipses = [
   },
   {
     id: "robust",
-    x: 430,
+    x: 530,
     y: 220,
     radiusX: 140,
     radiusY: 100,
@@ -50,7 +50,7 @@ const initialEllipses = [
   },
   {
     id: "intent",
-    x: 380,
+    x: 480,
     y: 330,
     radiusX: 150,
     radiusY: 80,
@@ -137,9 +137,9 @@ const VennApp = () => {
         Unique Intersections: <strong>{countIntersections()}</strong>
       </p>
       <Stage
-        width={700}
-        height={550}
-        style={{ border: "1px solid #ccc" }}
+        width={800}
+        height={600}
+        style={{ border: "1px solid #ccc", margin: "0 auto", display: "block" }}
         onMouseDown={(e) => {
           if (e.target === e.target.getStage()) {
             setSelectedId(null);
@@ -178,17 +178,17 @@ const VennApp = () => {
           ))}
 
           {/* X-axis legend with tick marks */}
-          <Line points={[50, 500, 650, 500]} stroke="black" strokeWidth={1} />
+          <Line points={[100, 550, 700, 550]} stroke="black" strokeWidth={1} />
           {[...Array(6)].map((_, i) => {
-            const x = 50 + (600 / 5) * i;
+            const x = 100 + (600 / 5) * i;
             const label = i === 1 ? "Low" : i === 3 ? "Med" : i === 5 ? "High" : "";
             return (
-              <React.Fragment key={`x-${i}`}>
-                <Line points={[x, 495, x, 505]} stroke="black" strokeWidth={1} />
+              <React.Fragment key={i}>
+                <Line points={[x, 545, x, 555]} stroke="black" strokeWidth={1} />
                 {label && (
                   <Text
                     x={x - 15}
-                    y={510}
+                    y={560}
                     text={label}
                     fontSize={12}
                     width={30}
@@ -199,26 +199,26 @@ const VennApp = () => {
             );
           })}
 
-          {/* Y-axis legend with tick marks and labels */}
-          <Line points={[30, 500, 30, 100]} stroke="black" strokeWidth={1} />
-          {[...Array(6)].map((_, i) => {
-            const y = 500 - (400 / 5) * i;
+          {/* Y-axis legend with tick marks */}
+          <Line points={[100, 50, 100, 550]} stroke="black" strokeWidth={1} />
+          {[...Array(10)].map((_, i) => {
+            const y = 50 + (500 / 9) * i;
             let label = "";
             if (i === 0) label = "Intention";
-            if (i === 2) label = "Activation";
-            if (i === 4) label = "Execution";
-            if (i === 5) label = "Eval + Adapt";
-            if (i === 6) label = "Impact";
+            else if (i === 2) label = "Activation";
+            else if (i === 4) label = "Execution";
+            else if (i === 9) label = "Impact";
+            else if (i === 8) label = "Eval + Adapt";
             return (
-              <React.Fragment key={`y-${i}`}>
-                <Line points={[25, y, 35, y]} stroke="black" strokeWidth={1} />
+              <React.Fragment key={i}>
+                <Line points={[95, y, 105, y]} stroke="black" strokeWidth={1} />
                 {label && (
                   <Text
-                    x={-20}
-                    y={y - 7}
+                    x={-10}
+                    y={y - 6}
                     text={label}
                     fontSize={12}
-                    width={50}
+                    width={100}
                     align="right"
                   />
                 )}
