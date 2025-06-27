@@ -59,6 +59,16 @@ const initialEllipses = [
   },
 ];
 
+const pointInEllipse = (x, y, ellipse) => {
+  const dx = x - ellipse.x;
+  const dy = y - ellipse.y;
+  return (
+    (dx * dx) / (ellipse.radiusX * ellipse.radiusX) +
+      (dy * dy) / (ellipse.radiusY * ellipse.radiusY) <=
+    1
+  );
+};
+
 const VennApp = () => {
   const [ellipses, setEllipses] = useState(initialEllipses);
   const [selectedId, setSelectedId] = useState(null);
@@ -96,34 +106,7 @@ const VennApp = () => {
     setEllipses(newEllipses);
   };
 
-  const getBoundingBox = (ellipse) => {
-    return {
-      left: ellipse.x - ellipse.radiusX,
-      right: ellipse.x + ellipse.radiusX,
-      top: ellipse.y - ellipse.radiusY,
-      bottom: ellipse.y + ellipse.radiusY,
-    };
-  };
-
-  const isOverlap = (boxes) => {
-    const intersection = boxes.reduce((acc, box) => {
-      if (!acc) return box;
-      return {
-        left: Math.max(acc.left, box.left),
-        right: Math.min(acc.right, box.right),
-        top: Math.max(acc.top, box.top),
-        bottom: Math.min(acc.bottom, box.bottom),
-      };
-    }, null);
-
-    return (
-      intersection &&
-      intersection.left < intersection.right &&
-      intersection.top < intersection.bottom
-    );
-  };
-
-  const countAllUniqueCombinations = () => {
+  const countAllStrictOverlaps = () => {
     const n = ellipses.length;
     const seen = new Set();
 
@@ -133,8 +116,23 @@ const VennApp = () => {
         if ((i >> j) & 1) indices.push(j);
       }
 
-      const boxes = indices.map((index) => getBoundingBox(ellipses[index]));
-      if (isOverlap(boxes)) {
+      let count = 0;
+      for (let x = 0; x <= 800; x += 10) {
+        for (let y = 0; y <= 600; y += 10) {
+          let inside = indices.every((idx) => pointInEllipse(x, y, ellipses[idx]));
+          let othersOutside = ellipses.every((el, idx) => {
+            if (!indices.includes(idx)) return !pointInEllipse(x, y, el);
+            return true;
+          });
+          if (inside && othersOutside) {
+            count++;
+            break;
+          }
+        }
+        if (count) break;
+      }
+
+      if (count) {
         const key = indices.map((i) => ellipses[i].id).sort().join("&");
         seen.add(key);
       }
@@ -147,7 +145,7 @@ const VennApp = () => {
     <div>
       <h2 style={{ textAlign: "center" }}>Venn Diagram Interaction</h2>
       <p style={{ textAlign: "center" }}>
-        Unique Intersections: <strong>{countAllUniqueCombinations()}</strong>
+        Unique Intersections: <strong>{countAllStrictOverlaps()}</strong>
       </p>
       <Stage
         width={800}
@@ -190,7 +188,6 @@ const VennApp = () => {
             </React.Fragment>
           ))}
 
-          {/* X-axis legend with tick marks */}
           <Line points={[100, 550, 700, 550]} stroke="black" strokeWidth={1} />
           {[...Array(6)].map((_, i) => {
             const x = 100 + (600 / 5) * i;
@@ -212,7 +209,6 @@ const VennApp = () => {
             );
           })}
 
-          {/* Y-axis legend with tick marks */}
           <Line points={[100, 50, 100, 550]} stroke="black" strokeWidth={1} />
           {[...Array(10)].map((_, i) => {
             const y = 550 - (500 / 9) * i;
