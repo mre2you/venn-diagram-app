@@ -1,6 +1,31 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Stage, Layer, Ellipse, Text, Transformer, Line } from "react-konva";
 import Konva from "konva";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+
+const intersectionLabels = [
+  { name: "Strategy", ids: ["intent"] },
+  { name: "Cohesion", ids: ["intent", "leadership"] },
+  { name: "Leadership", ids: ["leadership"] },
+  { name: "Dexterity", ids: ["intent", "leadership", "agile"] },
+  { name: "Rigor", ids: ["intent", "agile"] },
+  { name: "Sequencing", ids: ["intent", "robust"] },
+  { name: "Pragmatism", ids: ["intent", "robust", "agile"] },
+  { name: "Strategic Readiness", ids: ["intent", "leadership", "agile", "robust"] },
+  { name: "Commitment", ids: ["leadership", "agile"] },
+  { name: "Delivery Readiness", ids: ["leadership", "agile", "robust"] },
+  { name: "Activation", ids: ["robust"] },
+  { name: "Execution Mechanics", ids: ["robust", "agile"] },
+  { name: "Data-Driven Decision", ids: ["agile"] },
+  { name: "Fortitude", ids: ["agile", "cultural", "robust"] },
+  { name: "Engagement", ids: ["agile", "cultural"] },
+  { name: "Purpose", ids: ["cultural"] },
+  { name: "Dedication", ids: ["cultural", "change"] },
+  { name: "Organizational Realization", ids: ["cultural", "change", "agile"] },
+  { name: "Focus", ids: ["agile", "change"] },
+  { name: "Sustainability", ids: ["change"] },
+];
 
 const initialEllipses = [
   {
@@ -90,6 +115,7 @@ const VennApp = () => {
   const [ellipses, setEllipses] = useState(initialEllipses);
   const [selectedId, setSelectedId] = useState(null);
   const [ratings, setRatings] = useState({});
+  const stageRef = useRef();
   const shapeRefs = useRef({});
   const transformerRef = useRef();
 
@@ -131,6 +157,25 @@ const VennApp = () => {
     setRatings({ ...ratings, [id]: value });
   };
 
+  const handlePrintPDF = async () => {
+    const stage = stageRef.current;
+    const uri = stage.toDataURL({ pixelRatio: 2 });
+    const pdf = new jsPDF({ orientation: "landscape" });
+    pdf.addImage(uri, "PNG", 10, 10, 270, 180);
+    pdf.text("Applicable Intersections:", 10, 200);
+
+    let y = 210;
+    intersectionLabels.forEach(({ name, ids }) => {
+      const present = ids.every((id) => ellipses.some((el) => el.id === id));
+      if (present) {
+        pdf.text(name, 10, y);
+        y += 8;
+      }
+    });
+
+    pdf.save("venn-diagram.pdf");
+  };
+
   return (
     <div>
       <h2 style={{ textAlign: "center" }}>Venn Diagram Interaction</h2>
@@ -157,9 +202,11 @@ const VennApp = () => {
             </label>
           </div>
         ))}
+        <button onClick={handlePrintPDF}>Print to PDF</button>
       </div>
 
       <Stage
+        ref={stageRef}
         width={800}
         height={600}
         style={{ border: "1px solid #ccc", margin: "0 auto", display: "block" }}
