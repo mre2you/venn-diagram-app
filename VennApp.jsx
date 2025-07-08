@@ -166,10 +166,10 @@ const VennApp = () => {
     pdf.setFontSize(14);
     pdf.text("Venn Diagram", 10, 200);
 
-    // Page 2: Intersections
     const intersections = intersectionLabels.filter(({ ids }) =>
       ids.every((id) => ellipses.some((el) => el.id === id))
     );
+
     if (intersections.length > 0) {
       pdf.addPage();
       pdf.setFontSize(16);
@@ -183,12 +183,12 @@ const VennApp = () => {
             return el?.label.replace("\n", " ") || id;
           })
           .join(", ");
-        pdf.text(`• ${name} (${combination})`, 10, y);
-        y += 8;
-        if (y > 190) {
+        if (y > 280) {
           pdf.addPage();
           y = 20;
         }
+        pdf.text(`• ${name} (${combination})`, 10, y);
+        y += 8;
       });
     }
 
