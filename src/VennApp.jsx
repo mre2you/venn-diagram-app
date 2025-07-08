@@ -69,8 +69,8 @@ const pointInEllipse = (x, y, ellipse) => {
   );
 };
 
-const countAllStrictOverlaps = (ellipses, ratings) => {
-  const uniqueRegions = new Map();
+const countAllStrictOverlaps = (ellipses) => {
+  const uniqueRegions = new Set();
   for (let x = 0; x <= 800; x += 2) {
     for (let y = 0; y <= 600; y += 2) {
       const inside = ellipses
@@ -79,11 +79,11 @@ const countAllStrictOverlaps = (ellipses, ratings) => {
         .sort();
       if (inside.length > 0) {
         const key = inside.join("&");
-        uniqueRegions.set(key, inside);
+        uniqueRegions.add(key);
       }
     }
   }
-  return Array.from(uniqueRegions.values());
+  return uniqueRegions.size;
 };
 
 const VennApp = () => {
@@ -100,6 +100,9 @@ const VennApp = () => {
         transformerRef.current.nodes([node]);
         transformerRef.current.getLayer().batchDraw();
       }
+    } else if (transformerRef.current) {
+      transformerRef.current.nodes([]);
+      transformerRef.current.getLayer().batchDraw();
     }
   }, [selectedId, ellipses]);
 
@@ -125,19 +128,14 @@ const VennApp = () => {
   };
 
   const handleRatingChange = (id, value) => {
-    setRatings({ ...ratings, [id]: parseInt(value) });
+    setRatings({ ...ratings, [id]: value });
   };
-
-  const overlapRegions = countAllStrictOverlaps(ellipses, ratings);
-  const highlightRegions = overlapRegions.filter((region) =>
-    region.some((id) => ratings[id] && ratings[id] <= 2)
-  );
 
   return (
     <div>
       <h2 style={{ textAlign: "center" }}>Venn Diagram Interaction</h2>
       <p style={{ textAlign: "center" }}>
-        Unique Intersections: <strong>{overlapRegions.length}</strong>
+        Unique Intersections: <strong>{countAllStrictOverlaps(ellipses)}</strong>
       </p>
 
       <div style={{ textAlign: "center", marginBottom: "20px" }}>
@@ -168,6 +166,11 @@ const VennApp = () => {
         onMouseDown={(e) => {
           if (e.target === e.target.getStage()) {
             setSelectedId(null);
+          } else {
+            const clickedOnTransformer = e.target.getParent().className === 'Transformer';
+            if (!clickedOnTransformer) {
+              setSelectedId(null);
+            }
           }
         }}
       >
@@ -200,17 +203,6 @@ const VennApp = () => {
                 align="center"
               />
             </React.Fragment>
-          ))}
-
-          {highlightRegions.map((region, idx) => (
-            <Text
-              key={idx}
-              x={10}
-              y={580 - idx * 15}
-              text={`Overlap: ${region.join(", ")}`}
-              fontSize={10}
-              fill="red"
-            />
           ))}
 
           <Line points={[100, 550, 700, 550]} stroke="black" strokeWidth={1} />
