@@ -158,47 +158,52 @@ const VennApp = () => {
   };
 
   const handlePrintPDF = async () => {
-    const stage = stageRef.current;
-    const uri = stage.toDataURL({ pixelRatio: 2 });
-    const pdf = new jsPDF({ orientation: "landscape" });
+  const stage = stageRef.current;
+  const uri = stage.toDataURL({ pixelRatio: 2 });
+  const pdf = new jsPDF({ orientation: "landscape" });
 
-    // Page 1: Diagram Image
-    pdf.addImage(uri, "PNG", 10, 10, 270, 180);
-    pdf.setFontSize(14);
-    pdf.text("Venn Diagram", 10, 200);
+  // Page 1: Diagram
+  pdf.addImage(uri, "PNG", 10, 10, 270, 180);
+  pdf.setFontSize(14);
+  pdf.text("Venn Diagram", 10, 200);
 
-    // Page 2+: Intersections
-    const intersections = intersectionLabels.filter(({ ids }) =>
-      ids.every((id) => ellipses.some((el) => el.id === id))
-    );
+  // Page 2+: Intersection Labels
+  const intersections = intersectionLabels.filter(({ ids }) =>
+    ids.every((id) => ellipses.some((el) => el.id === id))
+  );
 
-    if (intersections.length > 0) {
+  pdf.addPage();
+  pdf.setFontSize(16);
+  pdf.text("Applicable Intersection Labels", 10, 20);
+  pdf.setFontSize(12);
+
+  let y = 30;
+
+  intersections.forEach(({ name, ids }, idx) => {
+    const combination = ids
+      .map((id) => {
+        const el = ellipses.find((e) => e.id === id);
+        return el?.label.replace("\n", " ") || id;
+      })
+      .join(", ");
+
+    // If we get close to the bottom of the page, add a new one
+    if (y > 190) {
       pdf.addPage();
-      pdf.setFontSize(16);
-      pdf.text("Applicable Intersection Labels", 10, 20);
-      pdf.setFontSize(12);
-
-      let y = 30;
-      intersections.forEach(({ name, ids }) => {
-        const combination = ids
-          .map((id) => {
-            const el = ellipses.find((e) => e.id === id);
-            return el?.label.replace("\n", " ") || id;
-          })
-          .join(", ");
-
-        if (y > 190) {
-          pdf.addPage();
-          y = 20;
-        }
-
-        pdf.text(`• ${name} (${combination})`, 10, y);
-        y += 8;
-      });
+      y = 20;
     }
 
-    pdf.save("venn-diagram.pdf");
-  };
+    pdf.text(`• ${name} (${combination})`, 10, y);
+    y += 8;
+  });
+
+  if (intersections.length === 0) {
+    pdf.text("No applicable intersection labels found.", 10, 30);
+  }
+
+  pdf.save("venn-diagram.pdf");
+};
+
 
   return (
     <div>
