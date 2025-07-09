@@ -241,30 +241,100 @@ const VennApp = () => {
       >
         <Layer>
           {ellipses.map((el, i) => (
-  <React.Fragment key={el.id}>
-    <Ellipse
-      ref={(node) => (shapeRefs.current[el.id] = node)}
-      x={el.x}
-      y={el.y}
-      radiusX={el.radiusX}
-      radiusY={el.radiusY}
-      fill={el.fill}
-      draggable
-      onClick={() => setSelectedId(el.id)}
-      onTap={() => setSelectedId(el.id)}
-      onDragMove={(e) => handleDragMove(i, e)}
-      onTransformEnd={(e) => handleTransform(i, e)}
-      stroke="black"
-      strokeWidth={1}
-    />
-    <Text
-      x={el.x - 70}
-      y={el.y - 10}
-      text={el.label}
-      fontSize={12}
-      width={140}
-      align="center"
-    />
-  </React.Fragment>
-))}
+            <React.Fragment key={el.id}>
+              <Ellipse
+                ref={(node) => (shapeRefs.current[el.id] = node)}
+                x={el.x}
+                y={el.y}
+                radiusX={el.radiusX}
+                radiusY={el.radiusY}
+                fill={el.fill}
+                draggable
+                onClick={() => setSelectedId(el.id)}
+                onTap={() => setSelectedId(el.id)}
+                onDragMove={(e) => handleDragMove(i, e)}
+                onTransformEnd={(e) => handleTransform(i, e)}
+                stroke="black"
+                strokeWidth={1}
+              />
+              <Text
+                x={el.x - 70}
+                y={el.y - 10}
+                text={el.label}
+                fontSize={12}
+                width={140}
+                align="center"
+              />
+            </React.Fragment>
+          ))}
 
+          {/* Axis lines and labels */}
+          <Line points={[100, 550, 700, 550]} stroke="black" strokeWidth={1} />
+          {[...Array(6)].map((_, i) => {
+            const x = 100 + (600 / 5) * i;
+            const label = i === 1 ? "Low" : i === 3 ? "Med" : i === 5 ? "High" : "";
+            return (
+              <React.Fragment key={`x-${i}`}>
+                <Line points={[x, 545, x, 555]} stroke="black" strokeWidth={1} />
+                {label && (
+                  <Text
+                    x={x - 15}
+                    y={560}
+                    text={label}
+                    fontSize={12}
+                    width={30}
+                    align="center"
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+
+          <Line points={[100, 50, 100, 550]} stroke="black" strokeWidth={1} />
+          {[...Array(10)].map((_, i) => {
+            const y = 550 - (500 / 9) * i;
+            let label = "";
+            if (i === 0) label = "Intention";
+            else if (i === 2) label = "Activation";
+            else if (i === 4) label = "Execution";
+            else if (i === 7) label = "Eval + Adapt";
+            else if (i === 9) label = "Impact";
+            return (
+              <React.Fragment key={`y-${i}`}>
+                <Line points={[95, y, 105, y]} stroke="black" strokeWidth={1} />
+                {label && (
+                  <Text
+                    x={-10}
+                    y={y - 6}
+                    text={label}
+                    fontSize={12}
+                    width={100}
+                    align="right"
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+
+          <Transformer
+            ref={transformerRef}
+            boundBoxFunc={(oldBox, newBox) => newBox}
+            enabledAnchors={[
+              "top-left",
+              "top-right",
+              "bottom-left",
+              "bottom-right",
+              "middle-left",
+              "middle-right",
+              "top-center",
+              "bottom-center",
+            ]}
+            rotateEnabled={false}
+          />
+        </Layer>
+      </Stage>
+    </div>
+  );
+};
+
+export default VennApp;
