@@ -240,28 +240,31 @@ const VennApp = () => {
         }}
       >
         <Layer>
-          <React.Fragment key={el.id}>
-  <Ellipse
-    ref={(node) => (shapeRefs.current[el.id] = node)}
-    x={el.x}
-    y={el.y}
-    radiusX={el.radiusX}
-    radiusY={el.radiusY}
-    fill={el.fill}
-    draggable
-    onClick={() => setSelectedId(el.id)}
-    onTap={() => setSelectedId(el.id)}
-    onDragMove={(e) => handleDragMove(i, e)}
-    onTransformEnd={(e) => handleTransform(i, e)}
-    stroke="black"
-    strokeWidth={1}
-  />
-  <Text
-    x={el.x - 70}
-    y={el.y - 10}
-    text={el.label}
-    fontSize={12}
-    width={140}
-    align="center"
-  />
-</React.Fragment>
+          {ellipses.map((el, i) => (
+  <React.Fragment key={el.id}>
+    <Ellipse
+      ref={(node) => (shapeRefs.current[el.id] = node)}
+      x={el.x}
+      y={el.y}
+      radiusX={el.radiusX}
+      radiusY={el.radiusY}
+      fill={el.fill}
+      draggable
+      onClick={() => setSelectedId(el.id)}
+      onTap={() => setSelectedId(el.id)}
+      onDragMove={(e) => handleDragMove(i, e)}
+      onTransformEnd={(e) => handleTransform(i, e)}
+      stroke="black"
+      strokeWidth={1}
+    />
+    <Text
+      x={el.x - 70}
+      y={el.y - 10}
+      text={el.label}
+      fontSize={12}
+      width={140}
+      align="center"
+    />
+  </React.Fragment>
+))}
+
