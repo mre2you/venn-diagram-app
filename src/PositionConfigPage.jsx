@@ -1,87 +1,82 @@
 import React from "react";
 
-const xLabels = ["Low", "", "Medium", "", "High"];
-const yLabels = [
-  "Intention",
-  "",
-  "Activation",
-  "",
-  "Execution",
-  "",
-  "",
-  "Eval + Adapt",
-  "",
-  "Impact",
-];
+const xScale = {
+  1: 200, // Low
+  3: 400, // Medium
+  5: 600, // High
+};
+
+const yScale = {
+  "Intention": 100,
+  "Activation": 200,
+  "Execution": 300,
+  "Eval + Adapt": 400,
+  "Impact": 500,
+};
 
 const PositionConfigPage = ({ ellipses, onPositionChange, onContinue }) => {
+  const handleXChange = (index, value) => {
+    const radiusX = ellipses[index].radiusX;
+    const targetRightEdge = xScale[value];
+    const newX = Math.max(targetRightEdge - radiusX, radiusX); // Prevent x < 0
+    onPositionChange(index, "x", newX);
+  };
+
+  const handleYChange = (index, label) => {
+    const newY = yScale[label];
+    onPositionChange(index, "y", newY);
+  };
+
   return (
-    <div style={{ padding: 20 }}>
-      <h2 style={{ textAlign: "center" }}>Set Ellipse Positions</h2>
-      {ellipses.map((el, i) => (
-        <div key={el.id} style={{ marginBottom: 20 }}>
-          <h4>{el.label.replace("\n", " ")}</h4>
+    <div style={{ padding: "20px" }}>
+      <h2>Configure Positions</h2>
+      {ellipses.map((ellipse, index) => (
+        <div key={ellipse.id} style={{ marginBottom: "20px" }}>
+          <h4>{ellipse.label.replace("\n", " ")}</h4>
+
+          {/* X Axis Rating */}
           <label>
-            X Position:
-            <input
-              type="range"
-              min="0"
-              max="4"
-              step="1"
-              value={mapXToLabelIndex(el.x)}
-              onChange={(e) =>
-                onPositionChange(i, "x", mapLabelIndexToX(Number(e.target.value)))
+            X-axis (Low → High):{" "}
+            <select
+              onChange={(e) => handleXChange(index, parseInt(e.target.value))}
+              value={
+                Object.keys(xScale).find(
+                  (key) =>
+                    Math.round(ellipse.x + ellipse.radiusX) === xScale[key]
+                ) || ""
               }
-            />
-            <span style={{ marginLeft: 10 }}>{xLabels[mapXToLabelIndex(el.x)]}</span>
+            >
+              <option value="">Select</option>
+              <option value="1">Low</option>
+              <option value="3">Medium</option>
+              <option value="5">High</option>
+            </select>
           </label>
+
           <br />
+
+          {/* Y Axis Stage */}
           <label>
-            Y Position:
-            <input
-              type="range"
-              min="0"
-              max="9"
-              step="1"
-              value={mapYToLabelIndex(el.y)}
-              onChange={(e) =>
-                onPositionChange(i, "y", mapLabelIndexToY(Number(e.target.value)))
+            Y-axis (Intention → Impact):{" "}
+            <select
+              onChange={(e) => handleYChange(index, e.target.value)}
+              value={
+                Object.keys(yScale).find((label) => ellipse.y === yScale[label]) || ""
               }
-            />
-            <span style={{ marginLeft: 10 }}>{yLabels[mapYToLabelIndex(el.y)]}</span>
+            >
+              <option value="">Select</option>
+              {Object.keys(yScale).map((label) => (
+                <option key={label} value={label}>
+                  {label}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
       ))}
-      <div style={{ textAlign: "center" }}>
-        <button onClick={onContinue}>Continue</button>
-      </div>
+      <button onClick={onContinue}>Continue</button>
     </div>
   );
 };
-
-const mapXToLabelIndex = (x) => {
-  if (x < 180) return 0;
-  if (x < 320) return 1;
-  if (x < 460) return 2;
-  if (x < 600) return 3;
-  return 4;
-};
-
-const mapLabelIndexToX = (index) => 100 + (600 / 4) * index;
-
-const mapYToLabelIndex = (y) => {
-  if (y < 100) return 0;
-  if (y < 150) return 1;
-  if (y < 200) return 2;
-  if (y < 250) return 3;
-  if (y < 300) return 4;
-  if (y < 350) return 5;
-  if (y < 400) return 6;
-  if (y < 450) return 7;
-  if (y < 500) return 8;
-  return 9;
-};
-
-const mapLabelIndexToY = (index) => 50 + (500 / 9) * index;
 
 export default PositionConfigPage;
