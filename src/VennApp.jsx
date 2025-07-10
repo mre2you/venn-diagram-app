@@ -1,1 +1,238 @@
-{"name": "VennApp_fix", "components": [{"type": "code", "language": "jsx", "content": "// Ensure this file is named VennApp.jsx\nimport React, { useRef, useState, useEffect } from "react";\nimport { Stage, Layer, Ellipse, Text, Transformer, Line } from "react-konva";\nimport Konva from "konva";\nimport html2canvas from "html2canvas";\nimport jsPDF from "jspdf";\nimport PositionConfigPage from "./PositionConfigPage";\n\nconst intersectionLabels = [\n { name: "Strategy", ids: ["intent"] },\n { name: "Cohesion", ids: ["intent", "leadership"] },\n { name: "Leadership", ids: ["leadership"] },\n { name: "Dexterity", ids: ["intent", "leadership", "agile"] },\n { name: "Rigor", ids: ["intent", "agile"] },\n { name: "Sequencing", ids: ["intent", "robust"] },\n { name: "Pragmatism", ids: ["intent", "robust", "agile"] },\n { name: "Strategic Readiness", ids: ["intent", "leadership", "agile", "robust"] },\n { name: "Commitment", ids: ["leadership", "agile"] },\n { name: "Delivery Readiness", ids: ["leadership", "agile", "robust"] },\n { name: "Activation", ids: ["robust"] },\n { name: "Execution Mechanics", ids: ["robust", "agile"] },\n { name: "Data-Driven Decision", ids: ["agile"] },\n { name: "Fortitude", ids: ["agile", "cultural", "robust"] },\n { name: "Engagement", ids: ["agile", "cultural"] },\n { name: "Purpose", ids: ["cultural"] },\n { name: "Dedication", ids: ["cultural", "change"] },\n { name: "Organizational Realization", ids: ["cultural", "change", "agile"] },\n { name: "Focus", ids: ["agile", "change"] },\n { name: "Sustainability", ids: ["change"] },\n];\n\nconst initialEllipses = [\n {\n id: "cultural",\n x: 200,\n y: 160,\n radiusX: 80,\n radiusY: 60,\n fill: "rgba(192, 80, 77, 0.4)",\n label: "Cultural resilience &\nEE buy-in",\n },\n {\n id: "leadership",\n x: 200,\n y: 400,\n radiusX: 100,\n radiusY: 80,\n fill: "rgba(237, 125, 49, 0.4)",\n label: "Leadership alignment\nand buy-in",\n },\n {\n id: "agile",\n x: 300,\n y: 280,\n radiusX: 130,\n radiusY: 100,\n fill: "rgba(91, 155, 213, 0.4)",\n label: "Agile, Data-driven decision\nmaking",\n },\n {\n id: "change",\n x: 350,\n y: 80,\n radiusX: 150,\n radiusY: 80,\n fill: "rgba(155, 187, 89, 0.4)",\n label: "Change sustainability",\n },\n {\n id: "robust",\n x: 500,\n y: 280,\n radiusX: 170,\n radiusY: 120,\n fill: "rgba(165, 165, 165, 0.3)",\n label: "Robust activation\nframework",\n },\n {\n id: "intent",\n x: 450,\n y: 450,\n radiusX: 150,\n radiusY: 80,\n fill: "rgba(201, 218, 248, 0.5)",\n label: "Clear Strategic Intent",\n },\n];\n\nconst pointInEllipse = (x, y, ellipse) => {\n const dx = x - ellipse.x;\n const dy = y - ellipse.y;\n return (\n (dx * dx) / (ellipse.radiusX * ellipse.radiusX) +\n (dy * dy) / (ellipse.radiusY * ellipse.radiusY) <=\n 1\n );\n};\n\nconst countAllStrictOverlaps = (ellipses) => {\n if (!Array.isArray(ellipses)) return 0;\n const uniqueRegions = new Set();\n for (let x = 0; x <= 800; x += 2) {\n for (let y = 0; y <= 600; y += 2) {\n const inside = ellipses\n .map((ellipse) => (pointInEllipse(x, y, ellipse) ? ellipse.id : null))\n .filter(Boolean)\n .sort();\n if (inside.length > 0) {\n const key = inside.join("&");\n uniqueRegions.add(key);\n }\n }\n }\n return uniqueRegions.size;\n};\n\nconst VennApp = () => {\n const [configMode, setConfigMode] = useState(true);\n const [ellipses, setEllipses] = useState(initialEllipses);\n const [selectedId, setSelectedId] = useState(null);\n const stageRef = useRef();\n const shapeRefs = useRef({});\n const transformerRef = useRef();\n\n const handlePositionChange = (index, axis, value) => {\n const newEllipses = [...ellipses];\n newEllipses[index][axis] = value;\n setEllipses(newEllipses);\n };\n\n useEffect(() => {\n if (selectedId && transformerRef.current) {\n const node = shapeRefs.current[selectedId];\n if (node) {\n transformerRef.current.nodes([node]);\n transformerRef.current.getLayer().batchDraw();\n }\n } else if (transformerRef.current) {\n transformerRef.current.nodes([]);\n transformerRef.current.getLayer().batchDraw();\n }\n }, [selectedId, ellipses]);\n\n const handleDragMove = (index, e) => {\n const newEllipses = [...ellipses];\n newEllipses[index].x = e.target.x();\n newEllipses[index].y = e.target.y();\n setEllipses(newEllipses);\n };\n\n const handleTransform = (index, e) => {\n const node = e.target;\n const width = node.width() * node.scaleX();\n const height = node.height() * node.scaleY();\n\n const newEllipses = [...ellipses];\n newEllipses[index].radiusX = Math.max(5, width / 2);\n newEllipses[index].radiusY = Math.max(5, height / 2);\n\n node.scaleX(1);\n node.scaleY(1);\n setEllipses(newEllipses);\n };\n\n const handlePrintPDF = async () => {\n const stage = stageRef.current;\n const uri = stage.toDataURL({ pixelRatio: 2 });\n const pdf = new jsPDF({ orientation: "landscape" });\n pdf.addImage(uri, "PNG", 10, 10, 270, 180);\n pdf.text("Applicable Intersections:", 10, 200);\n\n let y = 210;\n intersectionLabels.forEach(({ name, ids }) => {\n const present = ids.every((id) => ellipses.some((el) => el.id === id));\n if (present) {\n pdf.text(name, 10, y);\n y += 8;\n }\n });\n\n pdf.save("venn-diagram.pdf");\n };\n\n if (configMode) {\n return (\n <PositionConfigPage\n ellipses={ellipses}\n onPositionChange={handlePositionChange}\n onContinue={() => setConfigMode(false)}\n />\n );\n }\n\n return (\n <div>\n <h2 style={{ textAlign: "center" }}>Venn Diagram Interaction</h2>\n <p style={{ textAlign: "center" }}>\n Unique Intersections: <strong>{countAllStrictOverlaps(ellipses)}</strong>\n </p>\n\n <button onClick={handlePrintPDF} style={{ display: "block", margin: "10px auto" }}>\n Print to PDF\n </button>\n\n <Stage\n ref={stageRef}\n width={800}\n height={600}\n style={{ border: "1px solid #ccc", margin: "0 auto", display: "block" }}\n onMouseDown={(e) => {\n if (e.target === e.target.getStage()) {\n setSelectedId(null);\n } else {\n const clickedOnTransformer = e.target.getParent().className === "Transformer";\n if (!clickedOnTransformer) {\n setSelectedId(null);\n }\n }\n }}\n >\n <Layer>\n {ellipses.map((el, i) => (\n <React.Fragment key={el.id}>\n <Ellipse\n ref={(node) => (shapeRefs.current[el.id] = node)}\n x={el.x}\n y={el.y}\n radiusX={el.radiusX}\n radiusY={el.radiusY}\n fill={el.fill}\n draggable\n onClick={() => setSelectedId(el.id)}\n onTap={() => setSelectedId(el.id)}\n onDragMove={(e) => handleDragMove(i, e)}\n onTransformEnd={(e) => handleTransform(i, e)}\n stroke="black"\n strokeWidth={1}\n />\n <Text\n x={el.x - 70}\n y={el.y - 10}\n text={el.label}\n fontSize={12}\n width={140}\n align="center"\n />\n </React.Fragment>\n ))}\n\n {/* Axes */}\n <Line points={[100, 550, 700, 550]} stroke="black" strokeWidth={1} />\n {[...Array(6)].map((_, i) => {\n const x = 100 + (600 / 5) * i;\n const label = i === 1 ? "Low" : i === 3 ? "Med" : i === 5 ? "High" : "";\n return (\n <React.Fragment key={i}>\n <Line points={[x, 545, x, 555]} stroke="black" strokeWidth={1} />\n {label && (\n <Text\n x={x - 15}\n y={560}\n text={label}\n fontSize={12}\n width={30}\n align="center"\n />\n )}\n </React.Fragment>\n );\n })}\n\n <Line points={[100, 50, 100, 550]} stroke="black" strokeWidth={1} />\n {[0, 2, 4, 8, 10].map((val, i) => {\n const y = 550 - (val / 10) * 500;\n const label = ["Intention", "Activation", "Execution", "Eval + Adapt", "Sustained Impact"][i];\n return (\n <React.Fragment key={val}>\n <Line points={[95, y, 105, y]} stroke="black" strokeWidth={1} />\n <Text x={-10} y={y - 6} text={label} fontSize={12} width={100} align="right" />\n </React.Fragment>\n );\n })}\n\n <Transformer\n ref={transformerRef}\n boundBoxFunc={(oldBox, newBox) => newBox}\n enabledAnchors={[\n "top-left",\n "top-right",\n "bottom-left",\n "bottom-right",\n "middle-left",\n "middle-right",\n "top-center",\n "bottom-center",\n ]}\n rotateEnabled={false}\n />\n </Layer>\n </Stage>\n </div>\n );\n};\n\nexport default VennApp;"}]}
+import React, { useRef, useState, useEffect } from "react";
+import { Stage, Layer, Ellipse, Text, Transformer, Line } from "react-konva";
+import Konva from "konva";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import PositionConfigPage from "./PositionConfigPage";
+
+const intersectionLabels = [
+  { name: "Strategy", ids: ["intent"] },
+  { name: "Cohesion", ids: ["intent", "leadership"] },
+  { name: "Leadership", ids: ["leadership"] },
+  { name: "Dexterity", ids: ["intent", "leadership", "agile"] },
+  { name: "Rigor", ids: ["intent", "agile"] },
+  { name: "Sequencing", ids: ["intent", "robust"] },
+  { name: "Pragmatism", ids: ["intent", "robust", "agile"] },
+  { name: "Strategic Readiness", ids: ["intent", "leadership", "agile", "robust"] },
+  { name: "Commitment", ids: ["leadership", "agile"] },
+  { name: "Delivery Readiness", ids: ["leadership", "agile", "robust"] },
+  { name: "Activation", ids: ["robust"] },
+  { name: "Execution Mechanics", ids: ["robust", "agile"] },
+  { name: "Data-Driven Decision", ids: ["agile"] },
+  { name: "Fortitude", ids: ["agile", "cultural", "robust"] },
+  { name: "Engagement", ids: ["agile", "cultural"] },
+  { name: "Purpose", ids: ["cultural"] },
+  { name: "Dedication", ids: ["cultural", "change"] },
+  { name: "Organizational Realization", ids: ["cultural", "change", "agile"] },
+  { name: "Focus", ids: ["agile", "change"] },
+  { name: "Sustainability", ids: ["change"] },
+];
+
+const pointInEllipse = (x, y, ellipse) => {
+  const dx = x - ellipse.x;
+  const dy = y - ellipse.y;
+  return (
+    (dx * dx) / (ellipse.radiusX * ellipse.radiusX) +
+      (dy * dy) / (ellipse.radiusY * ellipse.radiusY) <=
+    1
+  );
+};
+
+const countAllStrictOverlaps = (ellipses) => {
+  if (!Array.isArray(ellipses)) return 0;
+  const uniqueRegions = new Set();
+  for (let x = 0; x <= 800; x += 4) {
+    for (let y = 0; y <= 600; y += 4) {
+      const inside = ellipses
+        .map((ellipse) => (pointInEllipse(x, y, ellipse) ? ellipse.id : null))
+        .filter(Boolean)
+        .sort();
+      if (inside.length > 0) {
+        const key = inside.join("&");
+        uniqueRegions.add(key);
+      }
+    }
+  }
+  return uniqueRegions.size;
+};
+
+const VennApp = () => {
+  const [configMode, setConfigMode] = useState(true);
+  const [ellipses, setEllipses] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const stageRef = useRef();
+  const shapeRefs = useRef({});
+  const transformerRef = useRef();
+
+  const handlePositionChange = (index, axis, value) => {
+    const updated = [...ellipses];
+    if (axis === "startY") {
+      const stopY = updated[index].stopY ?? updated[index].y + updated[index].radiusY;
+      const newY = (value + stopY) / 2;
+      const newRadiusY = Math.abs(stopY - value) / 2;
+      updated[index] = { ...updated[index], y: newY, radiusY: newRadiusY };
+    } else if (axis === "stopY") {
+      const startY = updated[index].startY ?? updated[index].y - updated[index].radiusY;
+      const newY = (startY + value) / 2;
+      const newRadiusY = Math.abs(value - startY) / 2;
+      updated[index] = { ...updated[index], y: newY, radiusY: newRadiusY };
+    } else if (axis === "x") {
+      updated[index].x = value;
+    }
+    updated[index].startY = updated[index].y - updated[index].radiusY;
+    updated[index].stopY = updated[index].y + updated[index].radiusY;
+    setEllipses(updated);
+  };
+
+  useEffect(() => {
+    if (selectedId && transformerRef.current) {
+      const node = shapeRefs.current[selectedId];
+      if (node) {
+        transformerRef.current.nodes([node]);
+        transformerRef.current.getLayer().batchDraw();
+      }
+    } else if (transformerRef.current) {
+      transformerRef.current.nodes([]);
+      transformerRef.current.getLayer().batchDraw();
+    }
+  }, [selectedId, ellipses]);
+
+  const handleDragMove = (index, e) => {
+    const updated = [...ellipses];
+    updated[index].x = e.target.x();
+    updated[index].y = e.target.y();
+    updated[index].startY = updated[index].y - updated[index].radiusY;
+    updated[index].stopY = updated[index].y + updated[index].radiusY;
+    setEllipses(updated);
+  };
+
+  const handleTransform = (index, e) => {
+    const node = e.target;
+    const width = node.width() * node.scaleX();
+    const height = node.height() * node.scaleY();
+    const updated = [...ellipses];
+    updated[index].radiusX = Math.max(5, width / 2);
+    updated[index].radiusY = Math.max(5, height / 2);
+    updated[index].startY = updated[index].y - updated[index].radiusY;
+    updated[index].stopY = updated[index].y + updated[index].radiusY;
+    node.scaleX(1);
+    node.scaleY(1);
+    setEllipses(updated);
+  };
+
+  const handlePrintPDF = async () => {
+    const stage = stageRef.current;
+    const uri = stage.toDataURL({ pixelRatio: 2 });
+    const pdf = new jsPDF({ orientation: "landscape" });
+    pdf.addImage(uri, "PNG", 10, 10, 270, 180);
+    pdf.text("Applicable Intersections:", 10, 200);
+    let y = 210;
+    intersectionLabels.forEach(({ name, ids }) => {
+      const present = ids.every((id) => ellipses.some((el) => el.id === id));
+      if (present) {
+        pdf.text(name, 10, y);
+        y += 8;
+      }
+    });
+    pdf.save("venn-diagram.pdf");
+  };
+
+  if (configMode) {
+    return (
+      <PositionConfigPage
+        ellipses={ellipses}
+        onEllipsesChange={setEllipses}
+        onPositionChange={handlePositionChange}
+        onContinue={() => setConfigMode(false)}
+      />
+    );
+  }
+
+  return (
+    <div>
+      <h2 style={{ textAlign: "center" }}>Venn Diagram Interaction</h2>
+      <p style={{ textAlign: "center" }}>
+        Unique Intersections: <strong>{countAllStrictOverlaps(ellipses)}</strong>
+      </p>
+      <button onClick={handlePrintPDF} style={{ display: "block", margin: "10px auto" }}>
+        Print to PDF
+      </button>
+
+      <Stage
+        ref={stageRef}
+        width={800}
+        height={600}
+        style={{ border: "1px solid #ccc", margin: "0 auto", display: "block" }}
+        onMouseDown={(e) => {
+          if (e.target === e.target.getStage()) {
+            setSelectedId(null);
+          } else {
+            const clickedOnTransformer = e.target.getParent().className === "Transformer";
+            if (!clickedOnTransformer) setSelectedId(null);
+          }
+        }}
+      >
+        <Layer>
+          {ellipses.map((el, i) => (
+            <React.Fragment key={el.id}>
+              <Ellipse
+                ref={(node) => (shapeRefs.current[el.id] = node)}
+                x={el.x}
+                y={el.y}
+                radiusX={el.radiusX}
+                radiusY={el.radiusY}
+                fill={el.fill}
+                draggable
+                onClick={() => setSelectedId(el.id)}
+                onTap={() => setSelectedId(el.id)}
+                onDragMove={(e) => handleDragMove(i, e)}
+                onTransformEnd={(e) => handleTransform(i, e)}
+                stroke="black"
+                strokeWidth={1}
+              />
+              <Text
+                x={el.x - 70}
+                y={el.y - 10}
+                text={el.label}
+                fontSize={12}
+                width={140}
+                align="center"
+              />
+            </React.Fragment>
+          ))}
+
+          {/* X-axis (Relative Value) */}
+          <Line points={[100, 550, 700, 550]} stroke="black" strokeWidth={1} />
+          {[0, 0.25, 0.5, 0.75, 1].map((val, i) => {
+            const x = 100 + 600 * val;
+            const label = ["Low", "", "Medium", "", "High"][i];
+            return (
+              <React.Fragment key={i}>
+                <Line points={[x, 545, x, 555]} stroke="black" strokeWidth={1} />
+                {label && <Text x={x - 15} y={560} text={label} fontSize={12} width={30} align="center" />}
+              </React.Fragment>
+            );
+          })}
+          <Text x={350} y={580} text="Relative Value" fontSize={14} />
+
+          {/* Y-axis (Stage) */}
+          <Line points={[100, 50, 100, 550]} stroke="black" strokeWidth={1} />
+          {[0, 2, 4, 8, 10].map((val, i) => {
+            const y = 550 - (val / 10) * 500;
+            const label = ["Intention", "Activation", "Execution", "Eval + Adapt", "Sustained Impact"][i];
+            return (
+              <React.Fragment key={val}>
+                <Line points={[95, y, 105, y]} stroke="black" strokeWidth={1} />
+                <Text x={-10} y={y - 6} text={label} fontSize={12} width={100} align="right" />
+              </React.Fragment>
+            );
+          })}
+          <Text x={10} y={20} text="Stage" fontSize={14} />
+          <Transformer ref={transformerRef} rotateEnabled={false} />
+        </Layer>
+      </Stage>
+    </div>
+  );
+};
+
+export default VennApp;
