@@ -1,76 +1,76 @@
 import React from "react";
 
-const xLabels = ["Low", "", "Med", "", "High"];
-const yLabels = {
-  0: "Intention",
-  2: "Activation",
-  4: "Execution",
-  8: "Eval + Adapt",
-  10: "Sustained Impact"
-};
+const yStageOptions = [
+  { label: "Intention", value: 0 },
+  { label: "Activation", value: 2 },
+  { label: "Execution", value: 4 },
+  { label: "Eval + Adapt", value: 8 },
+  { label: "Sustained Impact", value: 10 },
+];
 
 const PositionConfigPage = ({ ellipses, onPositionChange, onContinue }) => {
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Configure Ellipse Positions</h2>
-      {ellipses.map((el, index) => (
-        <div key={el.id} style={{ marginBottom: "20px" }}>
-          <h4>{el.label.replace("\n", " ")}</h4>
-          <div>
-            <label>X Axis (Low to High): </label>
-            <input
-              type="range"
-              min="0"
-              max="4"
-              step="1"
-              value={getXSliderValue(el.x)}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                const newX = mapSliderToX(val);
-                onPositionChange(index, "x", newX);
-              }}
-            />
-            <span style={{ marginLeft: "10px" }}>{xLabels[getXSliderValue(el.x)]}</span>
-          </div>
-          <div>
-            <label>Y Axis (Intention to Sustained Impact): </label>
-            <input
-              type="range"
-              min="0"
-              max="10"
-              step="1"
-              value={getYSliderValue(el.y)}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                const newY = mapSliderToY(val);
-                onPositionChange(index, "y", newY);
-              }}
-            />
-            <span style={{ marginLeft: "10px" }}>{yLabels[getYSliderValue(el.y)] || ""}</span>
-          </div>
+    <div style={{ padding: 20 }}>
+      <h2>Configure Ellipses</h2>
+      {ellipses.map((ellipse, index) => (
+        <div key={ellipse.id} style={{ marginBottom: 20 }}>
+          <h3>{ellipse.label}</h3>
+
+          <label>
+            Relative Value:
+            <select
+              value={ellipse.x}
+              onChange={(e) =>
+                onPositionChange(index, "x", Number(e.target.value))
+              }
+            >
+              <option value={100}>Low</option>
+              <option value={400}>Medium</option>
+              <option value={700}>High</option>
+            </select>
+          </label>
+
+          <br />
+
+          <label>
+            Start Stage:
+            <select
+              value={ellipse.stageStart ?? 0}
+              onChange={(e) =>
+                onPositionChange(index, "stageStart", Number(e.target.value))
+              }
+            >
+              {yStageOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <br />
+
+          <label>
+            End Stage:
+            <select
+              value={ellipse.stageEnd ?? 10}
+              onChange={(e) =>
+                onPositionChange(index, "stageEnd", Number(e.target.value))
+              }
+            >
+              {yStageOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       ))}
+
       <button onClick={onContinue}>Continue</button>
     </div>
   );
-};
-
-const mapSliderToX = (value) => {
-  // 0–4 maps to 100–700 linearly (Low to High)
-  return 100 + (value * 150);
-};
-
-const getXSliderValue = (x) => {
-  return Math.round((x - 100) / 150);
-};
-
-const mapSliderToY = (value) => {
-  // Y: 0 (Intention) -> y = 550, 10 (Sustained Impact) -> y = 50
-  return 550 - (value * 50);
-};
-
-const getYSliderValue = (y) => {
-  return Math.round((550 - y) / 50);
 };
 
 export default PositionConfigPage;
