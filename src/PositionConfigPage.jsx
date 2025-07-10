@@ -1,117 +1,76 @@
 import React from "react";
 
-const qualitativeX = [
-  { label: "Low", value: 1 },
-  { label: "Medium", value: 3 },
-  { label: "High", value: 5 },
-];
-
-const stageYLabels = [
-  "Intention",
-  "Activation",
-  "Execution",
-  "Eval + Adapt",
-  "Impact",
-];
+const xLabels = ["Low", "", "Med", "", "High"];
+const yLabels = {
+  0: "Intention",
+  2: "Activation",
+  4: "Execution",
+  8: "Eval + Adapt",
+  10: "Sustained Impact"
+};
 
 const PositionConfigPage = ({ ellipses, onPositionChange, onContinue }) => {
-  const handleXChange = (index, newValue) => {
-    const radius = ellipses[index].radiusX;
-    const newX = newValue * 100 - radius; // ensure rightmost edge is aligned to scale
-    onPositionChange(index, "x", Math.max(newX, 0));
-  };
-
-  const handleYBeginChange = (index, beginStage) => {
-    const endStage = ellipses[index].yEndStage || beginStage;
-    updateYAndRadius(index, beginStage, endStage);
-  };
-
-  const handleYEndChange = (index, endStage) => {
-    const beginStage = ellipses[index].yBeginStage || endStage;
-    updateYAndRadius(index, beginStage, endStage);
-  };
-
-  const updateYAndRadius = (index, beginStage, endStage) => {
-    const beginIndex = stageYLabels.indexOf(beginStage);
-    const endIndex = stageYLabels.indexOf(endStage);
-    const yTop = Math.min(beginIndex, endIndex);
-    const yBottom = Math.max(beginIndex, endIndex);
-    const pixelTop = 100 + yTop * 90;
-    const pixelBottom = 100 + yBottom * 90;
-    const centerY = (pixelTop + pixelBottom) / 2;
-    const radiusY = (pixelBottom - pixelTop) / 2;
-
-    onPositionChange(index, "y", centerY);
-    onPositionChange(index, "radiusY", radiusY);
-    onPositionChange(index, "yBeginStage", beginStage);
-    onPositionChange(index, "yEndStage", endStage);
-  };
-
   return (
-    <div>
-      <h2>Configure Ellipses</h2>
-      {ellipses.map((el, i) => (
+    <div style={{ padding: "20px" }}>
+      <h2>Configure Ellipse Positions</h2>
+      {ellipses.map((el, index) => (
         <div key={el.id} style={{ marginBottom: "20px" }}>
           <h4>{el.label.replace("\n", " ")}</h4>
-
-          <label>
-            X Position (Low → High):
-            <select
-              value={
-                qualitativeX.find(opt => el.x + el.radiusX <= opt.value * 100 + 1)?.label || ""
-              }
+          <div>
+            <label>X Axis (Low to High): </label>
+            <input
+              type="range"
+              min="0"
+              max="4"
+              step="1"
+              value={getXSliderValue(el.x)}
               onChange={(e) => {
-                const selected = qualitativeX.find(opt => opt.label === e.target.value);
-                if (selected) handleXChange(i, selected.value);
+                const val = parseInt(e.target.value);
+                const newX = mapSliderToX(val);
+                onPositionChange(index, "x", newX);
               }}
-            >
-              <option value="">Select</option>
-              {qualitativeX.map((opt) => (
-                <option key={opt.label} value={opt.label}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <br />
-
-          <label>
-            Y Begin:
-            <select
-              value={el.yBeginStage || ""}
-              onChange={(e) => handleYBeginChange(i, e.target.value)}
-            >
-              <option value="">Select</option>
-              {stageYLabels.map(label => (
-                <option key={label} value={label}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <br />
-
-          <label>
-            Y End:
-            <select
-              value={el.yEndStage || ""}
-              onChange={(e) => handleYEndChange(i, e.target.value)}
-            >
-              <option value="">Select</option>
-              {stageYLabels.map(label => (
-                <option key={label} value={label}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
+            />
+            <span style={{ marginLeft: "10px" }}>{xLabels[getXSliderValue(el.x)]}</span>
+          </div>
+          <div>
+            <label>Y Axis (Intention to Sustained Impact): </label>
+            <input
+              type="range"
+              min="0"
+              max="10"
+              step="1"
+              value={getYSliderValue(el.y)}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                const newY = mapSliderToY(val);
+                onPositionChange(index, "y", newY);
+              }}
+            />
+            <span style={{ marginLeft: "10px" }}>{yLabels[getYSliderValue(el.y)] || ""}</span>
+          </div>
         </div>
       ))}
       <button onClick={onContinue}>Continue</button>
     </div>
   );
+};
+
+const mapSliderToX = (value) => {
+  // 0–4 maps to 100–700 linearly (Low to High)
+  return 100 + (value * 150);
+};
+
+const getXSliderValue = (x) => {
+  return Math.round((x - 100) / 150);
+};
+
+const mapSliderToY = (value) => {
+  // Y: 0 (Intention) -> y = 550, 10 (Sustained Impact) -> y = 50
+  return 550 - (value * 50);
+};
+
+const getYSliderValue = (y) => {
+  return Math.round((550 - y) / 50);
 };
 
 export default PositionConfigPage;
